@@ -1,0 +1,7 @@
+Creer un framework spring from scratch
+
+Besoin:
+
+creer la classe FrontControllerServlet
+redefinir doGet, doPost
+creer une fonction processRequest
