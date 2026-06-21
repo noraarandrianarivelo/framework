@@ -5,3 +5,24 @@ Besoin:
 creer la classe FrontControllerServlet
 redefinir doGet, doPost
 creer une fonction processRequest
+
+Objectif: Spring mvc, web api
+
+comment creer une annotation, tester, recuperer
+
+classe, methode, attribut no afaka ametrahana annotation
+
+donc rehefa mcreer annotation de mila omena azy oe aiza avy no afaka ampiasana azy
+
+manamboatra annotation de manamboatra classe 1 itestena anle annotation
+
+ex: 
+@Controller 
+public class EmpController(){
+    @GetMapping('')
+    lister(@RequestMapping ...){
+        ModelAndView mv = ...
+
+        return mv;
+    }
+}
