@@ -26,3 +26,23 @@ public class EmpController(){
         return mv;
     }
 }
+
+
+
+------------------------------------------------
+Sprint3 et Sprint3 bis
+
+> Sprint 3:
+modifiena le UrlMapping, de asina argument vaovao oe ("GET"/"POST")
+
+Donc lasa miova le map au lieu de <url, Mapping> de lasa <urlMethod, Mapping>
+
+ao anaty Classe UrlMethode misy attribut 2: url, methoe (GET/POST)
+ avec fonction equals surdefini: rehefa misy urlMethod 2 mitovy de tsy afaka ampidirina ao anaty map le faharoa
+
+ 
+
+
+
+> Sprint 3 bis:
+invoquena le methode refa fantatra le url
