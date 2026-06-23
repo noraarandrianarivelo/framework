@@ -5,8 +5,7 @@ import java.lang.annotation.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Utilitaire {
     private String nom_package;
@@ -134,5 +133,59 @@ public class Utilitaire {
 
         return resultat;
     }
+
+public static Map<String, Mapping> recupererUrlMapping(Utilitaire utilitaire) throws Exception {
+    Map<String, Mapping> urlMapping = new HashMap<>();
+
+    List<Class<?>> classes = recupererClasses(utilitaire.getNom_package());
+
+    Class<?> annotationClass = Class.forName(utilitaire.getAnnotation());
+
+    if (!annotationClass.isAnnotation()) {
+        throw new Exception("Ce n'est pas une annotation");
+    }
+
+    Class<? extends Annotation> annotation = annotationClass.asSubclass(Annotation.class);
+
+    Method valueMethod = annotation.getMethod("value");
+
+    for (Class<?> classe : classes) {
+        for (Method method : classe.getDeclaredMethods()) {
+
+            if (method.isAnnotationPresent(annotation)) {
+
+                Annotation ann = method.getAnnotation(annotation);
+
+                String url = (String) valueMethod.invoke(ann);
+
+                urlMapping.put(url, new Mapping(classe, method));
+            }
+        }
+    }
+
+    return urlMapping;
+}
+
+// SANS REFLEXION
+
+// public static Map<String, Mapping> recupererUrlMapping(Utilitaire utilitaire) throws Exception {
+//     Map<String, Mapping> urlMapping = new HashMap<>();
+
+//     List<Class<?>> classes = recupererClasses(utilitaire.getNom_package());
+
+//     for (Class<?> classe : classes) {
+//         for (Method method : classe.getDeclaredMethods()) {
+
+//             if (method.isAnnotationPresent(UrlMapping.class)) {
+
+//                 String url = (String) method.getAnnotation(UrlMapping.class).value();
+
+//                 urlMapping.put(url, new Mapping(classe, method));
+//             }
+//         }
+//     }
+
+//     return urlMapping;
+// }
 
 }
