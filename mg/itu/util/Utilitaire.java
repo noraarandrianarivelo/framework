@@ -42,8 +42,7 @@ public class Utilitaire {
         this.nom_package = nom_package;
     }
 
-    public static List<Class<?>> recupererClasses(String nomPackage) throws Exception {
-        List<Class<?>> classes = new ArrayList<>();
+    public static void recupererClasses(String nomPackage, List<Class<?>> classes) throws Exception {
 
         String cheminDossier = nomPackage.replace('.', '/');
 
@@ -69,28 +68,23 @@ public class Utilitaire {
                 }
             }
         }
-        return classes;
     }
 
-    public static List<String> recupererClassesAvecAnnotation(Utilitaire utilitaire) throws Exception {
-        List<String> listeAvecAnnotation = new ArrayList<>();
-
+    public static void recupererClassesAvecAnnotation(Utilitaire utilitaire, List<String> listeAvecAnnotation) throws Exception {
         try {
-            listeAvecAnnotation = utilitaire.recupererElements(utilitaire);
+            utilitaire.recupererElements(utilitaire, listeAvecAnnotation);
 
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception("Erreur lors de la récupération des classes : " + e.getMessage());
         }
-
-        return listeAvecAnnotation;
     }
 
-    public List<String> recupererElements(Utilitaire utilitaire) throws Exception {
+    public void recupererElements(Utilitaire utilitaire, List<String> resultat) throws Exception {
 
-        List<String> resultat = new ArrayList<>();
 
-        List<Class<?>> classes = recupererClasses(utilitaire.getNom_package());
+        List<Class<?>> classes = new ArrayList<>();
+        recupererClasses(utilitaire.getNom_package(), classes);
 
         Class<?> annotationClass = Class.forName(utilitaire.getAnnotation());
 
@@ -131,13 +125,13 @@ public class Utilitaire {
                 break;
         }
 
-        return resultat;
     }
 
 public static Map<UrlMethod, Mapping> recupererUrlMapping(Utilitaire utilitaire) throws Exception {
     Map<UrlMethod, Mapping> urlMapping = new HashMap<>();
 
-    List<Class<?>> classes = recupererClasses(utilitaire.getNom_package());
+    List<Class<?>> classes = new ArrayList<>();
+    recupererClasses(utilitaire.getNom_package(), classes);
 
     Class<?> annotationClass = Class.forName(utilitaire.getAnnotation());
 
@@ -163,7 +157,7 @@ public static Map<UrlMethod, Mapping> recupererUrlMapping(Utilitaire utilitaire)
                 UrlMethod urlMethod = new UrlMethod(url, methodOfUrl);
 
 
-                if(urlMapping.get(urlMethod) != null){
+                if(urlMapping.containsKey(urlMethod)){
                     throw new Exception("URL Deja utilise par un autre controller : " + urlMethod.getUrl() + " avec la methode : " + urlMethod.getMethod());
                 }
 
