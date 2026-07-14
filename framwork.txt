@@ -53,3 +53,8 @@ mampiasa Listener: au demarrage appli web no manao ny asa rehetra ao anaty init
 > Sprint 5
 mamorona ModelAndView mba itenenanana anle Controller oe inona ny vue mifanaraka amle fonction
 
+
+
+
+
+mila manamboatra methode utilitaire mlister ny attribut anle fonction rehetra ao anaty controller, injectena avy eo le ApplicationContext, cote framework zany tokony manao test oe raha ApplicationContext ny type anle attribut de tokony manao anzao ...
