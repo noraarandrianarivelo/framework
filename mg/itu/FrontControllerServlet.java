@@ -22,12 +22,11 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
 
     Object applicationContext;
 
-
     public void init() throws ServletException {
         listeControllers = (List<String>) getServletContext().getAttribute("listeControllers");
         urlMapping = (Map<UrlMethod, Mapping>) getServletContext().getAttribute("urlMapping");
 
-        if(getServletContext().getAttribute("springContext") != null){
+        if (getServletContext().getAttribute("springContext") != null) {
             applicationContext = getServletContext().getAttribute("springContext");
         }
 
@@ -35,14 +34,10 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html");
         PrintWriter out = response.getWriter();
 
         String url = request.getRequestURI().substring(request.getContextPath().length());
         String method = request.getMethod();
-
-        out.println("<h1>Front Controller</h1>");
-        out.println("<p>URL recue : " + url + "</p>");
 
         afficher(url, method, request, response, out);
 
@@ -66,12 +61,25 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
         Mapping mapping = urlMapping.get(urlMethod);
 
         if (mapping != null) {
-            out.println("<p>URL: " + urlMethod.getUrl() + " avec la methode : " + urlMethod.getMethod() + "| Classe: "
-                    + mapping.getClasse().getName() + " | Fonction: "
-                    + mapping.getMethode().getName() + "</p>");
+            
             try {
                 Object instance = mapping.getClasse().getDeclaredConstructor().newInstance();
                 Method methode = mapping.getMethode();
+                boolean is_apiRest = Utilitaire.estApiRest(methode);
+
+                if(is_apiRest){
+                    response.setContentType("application/json");
+                }
+                else
+                {
+                    response.setContentType("text/html");
+
+                    out.println("<h1>Front Controller</h1>");
+                    out.println("<p>URL recue : " + url + "</p>");
+                    out.println("<p>URL: " + urlMethod.getUrl() + " avec la methode : " + urlMethod.getMethod() + "| Classe: "
+                    + mapping.getClasse().getName() + " | Fonction: "
+                    + mapping.getMethode().getName() + "</p>");
+                }
 
                 Object[] arguments = new Object[methode.getParameters().length];
 
@@ -84,6 +92,7 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
 
                 Object resultat = methode.invoke(instance, arguments);
 
+                // tokony mbola misy condition hoe raha apiRest dia json no averina fa raha tsy apiRest dia ModelAndView no averina
                 if (resultat instanceof ModelAndView) {
                     ModelAndView mv = (ModelAndView) resultat;
                     ViewResolver viewResolver = new ViewResolver();
@@ -97,8 +106,14 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
 
                     RequestDispatcher dispatcher = request.getRequestDispatcher(viewResolver.getCheminCompletVue());
                     dispatcher.forward(request, response);
-                } else {
-                    out.println("<p>Le résultat de la méthode n'est pas de type ModelAndView.</p>");
+                } 
+                
+                if(is_apiRest){
+                    if(resultat instanceof String){
+                        out.println((String) resultat);
+                    }else{
+                        out.println(Utilitaire.toJson(resultat));
+                    }
                 }
 
             } catch (Exception e) {
