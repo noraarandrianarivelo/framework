@@ -15,6 +15,9 @@ public class ApplicationListener implements ServletContextListener {
         List<String> listeControllers = new ArrayList<>();
         Map<UrlMethod, Mapping> urlMapping;
 
+        // Ao anaty UrlMethode: misy url et methode (GET ou POST)
+        // Ao anaty Mapping ndray: misy classe et methode (fonction)
+
         try {
             try {
                 Class<?> utils = Class.forName(
@@ -40,6 +43,9 @@ public class ApplicationListener implements ServletContextListener {
 
             urlMapping = Utilitaire.recupererUrlMapping(
                     new Utilitaire(nom_package, "mg.itu.annotation.UrlMapping", ElementType.METHOD));
+
+            // ETO LE AMPINA 2EME VERIFICATION ANNOTATION @ApiRest de ampidirina anaty zavatra variable ray daholo
+            // ILAINA FANTATRA OE INONA NY CLASSES, NY METHODE SY NY URL
 
             servletContext.setAttribute("urlMapping", urlMapping);
         } catch (Exception e) {

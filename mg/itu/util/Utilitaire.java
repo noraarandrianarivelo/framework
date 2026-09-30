@@ -8,6 +8,10 @@ import java.lang.reflect.Parameter;
 import java.net.URL;
 import java.util.*;
 
+import com.google.gson.Gson;
+
+import com.mysql.cj.util.Util;
+
 public class Utilitaire {
     private String nom_package;
     private String annotation;
@@ -185,6 +189,29 @@ public class Utilitaire {
             Parameter p = methode.getParameters()[i];
         }
     }
+
+    public static boolean estApiRest(Method methode) {
+        return methode.isAnnotationPresent(mg.itu.annotation.ApiRest.class);
+    }
+
+    public static String toJson(Object object) {
+        Gson gson = new Gson();
+        return gson.toJson(object);
+    }
+
+    // TOKONY MANAMBOATRA FONCTION RAY MVERIFIER OE LE LIEN VE MANANA fonction annote @UrlMapping (Matoa izy anaty urMethode, efa verifier zany oe manana annotation @UrlMapping zany)
+    // VERIFIENA OE LE METHODE ANNOTE @UrlMapping ve misy annotation hafa @ApiRest
+
+
+
+
+
+
+
+
+
+
+
 
     // SANS REFLEXION
 

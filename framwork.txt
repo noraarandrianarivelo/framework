@@ -58,3 +58,41 @@ mamorona ModelAndView mba itenenanana anle Controller oe inona ny vue mifanaraka
 
 
 mila manamboatra methode utilitaire mlister ny attribut anle fonction rehetra ao anaty controller, injectena avy eo le ApplicationContext, cote framework zany tokony manao test oe raha ApplicationContext ny type anle attribut de tokony manao anzao ...
+
+
+> Sprint 5 bis: atao mande am spring le framework (tonga mande foana le izy na misy spring na tsisy)
+
+> Sprint 6: manamboatra api de atao mamerina json
+    (quelque part zany tokony manana annotation 1 dans lequel misy value 'lien', de rehefa antsoina iny lien iny de json no averina fa tsy ModelAndView)
+
+Manampy annotation 1 apetaka am methode (cote test), tsy mande any am vue fa tonga de mamerina json
+atao oe @Apirest na @Json na @WebAPi ny anarany
+
+le methode atao mretourner object de zay vo avadika json
+
+raha string le retour de tsy miantso toJson tsony
+fa raha object de mila miantso toJson mamadika anle object ho json
+
+NB: double annotation
+
+de avy eo atao printWriter fotsiny
+
+
+> Sprint 7: 
+binding
+ fandefasana donne de vue mande controller
+
+ lasa misy parametre Emp ohatra ao anaty methode
+
+ ex: save(String nom, String prenom, int age){} atao null daoly lony par defaut
+    alaina daholo ny anarana parametre avy any am view
+
+    de liena avy eo
+
+j'explique: 
+manana formulaire za cote vue (manana champ 3: nom, prenom, age)
+manao mapping ana url foana (POST, de miaraka amle url)
+puis rehefa hita le UrlMethode mifanaraka amle url any am controller de verifiena ny parametre anle fonction (inona daholo ny parametre?)
+verifiena oe inona daoly ny anaranle parametre nalefa avy any am vue, de matchena am non anle variable ao amle parametre anle fonction
+de affichena fotsiny lony pour l'instant le valeur.
+
