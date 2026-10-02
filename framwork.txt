@@ -96,3 +96,11 @@ puis rehefa hita le UrlMethode mifanaraka amle url any am controller de verifien
 verifiena oe inona daoly ny anaranle parametre nalefa avy any am vue, de matchena am non anle variable ao amle parametre anle fonction
 de affichena fotsiny lony pour l'instant le valeur.
 
+
+> Sprint 7 bis: 
+binding objet 
+ex: parametre anle fonction ohatra Employee de tonga de le instance anle Employee no fenoina
+
+
+java 8, tomcat 9
+oracle 11 org ee

@@ -12,6 +12,9 @@ import com.google.gson.Gson;
 
 import com.mysql.cj.util.Util;
 
+import java.time.LocalDate;
+ 
+
 public class Utilitaire {
     private String nom_package;
     private String annotation;
@@ -174,13 +177,13 @@ public class Utilitaire {
         return urlMapping;
     }
 
+    // je pense que il faut que je cree une toute nouvelle fonction, de asina map mitazona ny anarana sy ny valeur anle parametre
     public static void creerArguments(Method methode, Object[] arguments, Object applicationContext) {
         for (int i = 0; i < methode.getParameters().length; i++) {
             Parameter p = methode.getParameters()[i];
             if (applicationContext != null && p.getType().isAssignableFrom(applicationContext.getClass())) {
                 arguments[i] = applicationContext;
-            }
-
+            }            
         }
     }
 
@@ -202,38 +205,80 @@ public class Utilitaire {
     // TOKONY MANAMBOATRA FONCTION RAY MVERIFIER OE LE LIEN VE MANANA fonction annote @UrlMapping (Matoa izy anaty urMethode, efa verifier zany oe manana annotation @UrlMapping zany)
     // VERIFIENA OE LE METHODE ANNOTE @UrlMapping ve misy annotation hafa @ApiRest
 
+    public static Object conversionObject(String valeur, Class<?> type) {
+        if (valeur == null || valeur.isEmpty()) {
+            return null;
+        }
 
+        if (type == String.class) {
+            return valeur;
+        } else if (type == int.class || type == Integer.class) {
+            return Integer.parseInt(valeur);
+        } else if (type == long.class || type == Long.class) {
+            return Long.parseLong(valeur);
+        } else if (type == double.class || type == Double.class) {
+            return Double.parseDouble(valeur);
+        } else if (type == boolean.class || type == Boolean.class) {
+            return Boolean.parseBoolean(valeur);
+        } else if (type == LocalDate.class){
+            return LocalDate.parse(valeur);
+        }
+        // Ajouter d'autres types si nécessaire
 
+        throw new IllegalArgumentException("Type non pris en charge : " + type.getName());
+    }
 
+    public static Map<String, Object> creerMapNomValeurParametre(Method methode, Map<String, String[]> param_value) {
+        Map<String, Object> map_nom_valeur_param = new HashMap<>();
 
+        for (Parameter p : methode.getParameters()) {
 
+            Class<?> type_param = p.getType();
+            String nom_param = p.getName();
 
+            if (param_value.containsKey(nom_param)) {
 
+                String[] valeur_param = param_value.get(nom_param);
 
+                if (valeur_param != null && valeur_param.length > 0) {
+                    Object valeurConvertie =
+                            conversionObject(valeur_param[0], type_param);
 
+                    map_nom_valeur_param.put(nom_param, valeurConvertie);
+                }
+            }
+        }
+        // Map<String, String[]> param_value = request.getParameterMap(); // mamerina ny nom sy ny valeur anle input avy any am affichage
+        // Ny avy any am affichage efa azo daholo
+        // le mampifandray anazy amle anaranle parametre any am controller sisa
+        
+        return map_nom_valeur_param;
+    }
 
+    public static void creerArguments(Method methode, Object[] arguments, Map<String, String[]> param_value) {
+        if(param_value != null){
+            Map<String, Object> map_nom_valeur_param = creerMapNomValeurParametre(methode, param_value);
 
-    // SANS REFLEXION
+            for (int i = 0; i < methode.getParameters().length; i++) {
+                Parameter p = methode.getParameters()[i];
+                String nom_param = p.getName();
 
-    // public static Map<String, Mapping> recupererUrlMapping(Utilitaire utilitaire)
-    // throws Exception {
-    // Map<String, Mapping> urlMapping = new HashMap<>();
+                if (map_nom_valeur_param.containsKey(nom_param)) {
+                    arguments[i] = map_nom_valeur_param.get(nom_param);
+                }
+            }
+        } else {
+            creerArguments(methode, arguments);
+        }
+    }
 
-    // List<Class<?>> classes = recupererClasses(utilitaire.getNom_package());
-
-    // for (Class<?> classe : classes) {
-    // for (Method method : classe.getDeclaredMethods()) {
-
-    // if (method.isAnnotationPresent(UrlMapping.class)) {
-
-    // String url = (String) method.getAnnotation(UrlMapping.class).value();
-
-    // urlMapping.put(url, new Mapping(classe, method));
-    // }
-    // }
-    // }
-
-    // return urlMapping;
-    // }
+    public static boolean possedeApplicationContext(Method methode) {
+        for (Parameter p : methode.getParameters()) {
+            if (p.getType().getSimpleName().equals("ApplicationContext")) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

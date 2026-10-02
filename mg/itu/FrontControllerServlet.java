@@ -8,9 +8,13 @@ import jakarta.servlet.annotation.*;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.InvocationTargetException;
 
 import mg.itu.util.*;
 import java.util.*;
+
+import com.google.gson.Gson;
+
 import mg.itu.listener.ApplicationListener;
 import mg.itu.view.*;
 
@@ -38,7 +42,6 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
 
         String url = request.getRequestURI().substring(request.getContextPath().length());
         String method = request.getMethod();
-
         afficher(url, method, request, response, out);
 
     }
@@ -61,7 +64,7 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
         Mapping mapping = urlMapping.get(urlMethod);
 
         if (mapping != null) {
-            
+             
             try {
                 Object instance = mapping.getClasse().getDeclaredConstructor().newInstance();
                 Method methode = mapping.getMethode();
@@ -83,11 +86,15 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
 
                 Object[] arguments = new Object[methode.getParameters().length];
 
+                Utilitaire.creerArguments(methode, arguments, request.getParameterMap());
+
                 // MIla jerena oe inona daholo ny parametres an'ilay methode
                 if(applicationContext != null){
-                    Utilitaire.creerArguments(methode, arguments, applicationContext);
-                }else{
-                    Utilitaire.creerArguments(methode, arguments);
+                
+                    if(Utilitaire.possedeApplicationContext(methode)){
+                        Utilitaire.creerArguments(methode, arguments, applicationContext);
+                    }
+
                 }
 
                 Object resultat = methode.invoke(instance, arguments);
@@ -117,8 +124,17 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
                 }
 
             } catch (Exception e) {
-                out.println("<p>Erreur lors de l'invocation de la méthode : " + e.getMessage() + "</p>");
+                e.printStackTrace();
+                Throwable cause = e instanceof InvocationTargetException
+                    ? ((InvocationTargetException) e).getTargetException()
+                    : e.getCause();
+                if (cause != null) cause.printStackTrace();
+                Throwable erreurReelle = cause != null ? cause : e;
+                out.println("<p>Erreur : " + erreurReelle.getClass().getName()
+                    + " - " + erreurReelle.getMessage() + "</p>");
             }
+
+            
         } else {
             out.println("Url non trouvee : " + url);
             out.println("<h2>Liste des URL disponibles :</h2>");
