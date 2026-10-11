@@ -13,7 +13,6 @@ import com.google.gson.Gson;
 import com.mysql.cj.util.Util;
 
 import java.time.LocalDate;
- 
 
 public class Utilitaire {
     private String nom_package;
@@ -177,13 +176,14 @@ public class Utilitaire {
         return urlMapping;
     }
 
-    // je pense que il faut que je cree une toute nouvelle fonction, de asina map mitazona ny anarana sy ny valeur anle parametre
+    // je pense que il faut que je cree une toute nouvelle fonction, de asina map
+    // mitazona ny anarana sy ny valeur anle parametre
     public static void creerArguments(Method methode, Object[] arguments, Object applicationContext) {
         for (int i = 0; i < methode.getParameters().length; i++) {
             Parameter p = methode.getParameters()[i];
             if (applicationContext != null && p.getType().isAssignableFrom(applicationContext.getClass())) {
                 arguments[i] = applicationContext;
-            }            
+            }
         }
     }
 
@@ -202,7 +202,9 @@ public class Utilitaire {
         return gson.toJson(object);
     }
 
-    // TOKONY MANAMBOATRA FONCTION RAY MVERIFIER OE LE LIEN VE MANANA fonction annote @UrlMapping (Matoa izy anaty urMethode, efa verifier zany oe manana annotation @UrlMapping zany)
+    // TOKONY MANAMBOATRA FONCTION RAY MVERIFIER OE LE LIEN VE MANANA fonction
+    // annote @UrlMapping (Matoa izy anaty urMethode, efa verifier zany oe manana
+    // annotation @UrlMapping zany)
     // VERIFIENA OE LE METHODE ANNOTE @UrlMapping ve misy annotation hafa @ApiRest
 
     public static Object conversionObject(String valeur, Class<?> type) {
@@ -220,7 +222,7 @@ public class Utilitaire {
             return Double.parseDouble(valeur);
         } else if (type == boolean.class || type == Boolean.class) {
             return Boolean.parseBoolean(valeur);
-        } else if (type == LocalDate.class){
+        } else if (type == LocalDate.class) {
             return LocalDate.parse(valeur);
         }
         // Ajouter d'autres types si nécessaire
@@ -228,47 +230,212 @@ public class Utilitaire {
         throw new IllegalArgumentException("Type non pris en charge : " + type.getName());
     }
 
+
+    // ty ndray zao no mila atao reflexion
+    // public static Map<String, Object> creerMapNomValeurParametre(Method methode, Map<String, String[]> param_value) {
+    //     Map<String, Object> map_nom_valeur_param = new HashMap<>();
+
+    //     for (Parameter p : methode.getParameters()) {
+
+    //         Class<?> type_param = p.getType();
+            
+    //         String nom_param = p.getName();
+
+    //         if (param_value.containsKey(nom_param)) {
+
+    //             String[] valeur_param = param_value.get(nom_param);
+
+    //             if (valeur_param != null && valeur_param.length > 0) {
+    //                 Object valeurConvertie = conversionObject(valeur_param[0], type_param);
+
+    //                 map_nom_valeur_param.put(nom_param, valeurConvertie);
+    //             }
+    //         }
+    //     }
+    //     // Map<String, String[]> param_value = request.getParameterMap(); // mamerina ny
+    //     // nom sy ny valeur anle input avy any am affichage
+    //     // Ny avy any am affichage efa azo daholo
+    //     // le mampifandray anazy amle anaranle parametre any am controller sisa
+
+    //     return map_nom_valeur_param;
+    // }
+
     public static Map<String, Object> creerMapNomValeurParametre(Method methode, Map<String, String[]> param_value) {
         Map<String, Object> map_nom_valeur_param = new HashMap<>();
 
         for (Parameter p : methode.getParameters()) {
 
             Class<?> type_param = p.getType();
+
             String nom_param = p.getName();
+            
+            if(Utilitaire.estNatif(type_param)){
+                if (param_value.containsKey(nom_param)) {
 
-            if (param_value.containsKey(nom_param)) {
+                    String[] valeur_param = param_value.get(nom_param);
 
-                String[] valeur_param = param_value.get(nom_param);
+                    if (valeur_param != null && valeur_param.length > 0) {
+                        Object valeurConvertie = conversionObject(valeur_param[0], type_param);
 
-                if (valeur_param != null && valeur_param.length > 0) {
-                    Object valeurConvertie =
-                            conversionObject(valeur_param[0], type_param);
+                        map_nom_valeur_param.put(nom_param, valeurConvertie);
+                    }
+                }
+            } else {
+                for (Field field : type_param.getDeclaredFields()) {
+                    String nom_attribut = field.getName();
+                    if(Utilitaire.estNatif(field.getType())) {
+                        if (param_value.containsKey(nom_attribut)) {
+                            String[] valeur_param = param_value.get(nom_attribut);
 
-                    map_nom_valeur_param.put(nom_param, valeurConvertie);
+                            if (valeur_param != null && valeur_param.length > 0) {
+                                Object valeurConvertie = conversionObject(valeur_param[0], field.getType());
+
+                                map_nom_valeur_param.put(nom_attribut, valeurConvertie);
+                            }
+                        }
+                    } else {
+                        // Si le type de l'attribut n'est pas natif, vous pouvez gérer la récursion ici
+                        // pour remplir les attributs imbriqués si nécessaire.
+                        remplirParametresRecursivement(field.getType(), param_value, map_nom_valeur_param);
+                    }   
                 }
             }
+
+
         }
-        // Map<String, String[]> param_value = request.getParameterMap(); // mamerina ny nom sy ny valeur anle input avy any am affichage
+        // Map<String, String[]> param_value = request.getParameterMap(); // mamerina ny
+        // nom sy ny valeur anle input avy any am affichage
         // Ny avy any am affichage efa azo daholo
         // le mampifandray anazy amle anaranle parametre any am controller sisa
-        
+
         return map_nom_valeur_param;
     }
 
+    public static void remplirParametresRecursivement(Class<?> type, Map<String, String[]> param_value, Map<String, Object> map_nom_valeur_param) {
+
+        for (Field field : type.getDeclaredFields()) {
+
+            String nom_attribut = field.getName();
+            Class<?> type_attribut = field.getType();
+
+            if (Utilitaire.estNatif(type_attribut)) {
+
+                if (param_value.containsKey(nom_attribut)) {
+
+                    String[] valeur_param = param_value.get(nom_attribut);
+
+                    if (valeur_param != null && valeur_param.length > 0) {
+
+                        Object valeurConvertie = conversionObject(
+                                valeur_param[0],
+                                type_attribut
+                        );
+
+                        map_nom_valeur_param.put(
+                                nom_attribut,
+                                valeurConvertie
+                        );
+                    }
+                }
+
+            } else {
+
+                // Le champ est lui-même un objet :
+                // on descend encore d'un niveau.
+                remplirParametresRecursivement(
+                        type_attribut,
+                        param_value,
+                        map_nom_valeur_param
+                );
+            }
+        }
+    }
+
+    // public static void creerArguments(Method methode, Object[] arguments,
+    //         Map<String, String[]> param_value) {
+    //     if (param_value != null) {
+    //         Map<String, Object> map_nom_valeur_param = creerMapNomValeurParametre(methode, param_value);
+
+    //         for (int i = 0; i < methode.getParameters().length; i++) {
+    //             Parameter p = methode.getParameters()[i];
+    //             String nom_param = p.getName();
+
+    //             if (map_nom_valeur_param.containsKey(nom_param)) {
+    //                 arguments[i] = map_nom_valeur_param.get(nom_param);
+    //             }
+    //         }
+    //     } else {
+    //         creerArguments(methode, arguments);
+    //     }
+    // }
+
     public static void creerArguments(Method methode, Object[] arguments, Map<String, String[]> param_value) {
-        if(param_value != null){
+        if (param_value != null) {
             Map<String, Object> map_nom_valeur_param = creerMapNomValeurParametre(methode, param_value);
 
             for (int i = 0; i < methode.getParameters().length; i++) {
                 Parameter p = methode.getParameters()[i];
+
                 String nom_param = p.getName();
 
-                if (map_nom_valeur_param.containsKey(nom_param)) {
-                    arguments[i] = map_nom_valeur_param.get(nom_param);
+                if (Utilitaire.estNatif(p.getType())) { // si natif ny type anle parametre dia tonga de alaina fotsiny ny valeur mifanaraka aminy avy any am vue
+                    if (map_nom_valeur_param.containsKey(nom_param)) {
+                        arguments[i] = map_nom_valeur_param.get(nom_param);
+                    }
+                } else { // sinon de jerena aloha ny attribut anle parametre de raha type natif de tonga de matchena ihany fa raha mbola tsy natif de idirana ndray ny attribut any
+                    Object attributInstance = null;
+
+                    if(attributInstance == null){
+                        try {
+                            attributInstance = p.getType().getDeclaredConstructor().newInstance();
+
+                            remplirObjet(attributInstance, p.getType(), map_nom_valeur_param);
+                            arguments[i] = attributInstance;
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
         } else {
             creerArguments(methode, arguments);
+        }
+    }
+
+    public static void remplirObjet(Object objet, Class<?> type, Map<String, Object> map_nom_valeur_param) {
+        try {
+            for (Field field : type.getDeclaredFields()) {
+
+                field.setAccessible(true);
+
+                String nom_attribut = field.getName();
+
+                if (Utilitaire.estNatif(field.getType())) {
+
+                    if (map_nom_valeur_param.containsKey(nom_attribut)) {
+                        field.set(objet, map_nom_valeur_param.get(nom_attribut));
+                    }
+
+                } else {
+
+                    Object objetAttribut = field.getType()
+                            .getDeclaredConstructor()
+                            .newInstance();
+
+                    // Appel récursif
+                    remplirObjet(
+                            objetAttribut,
+                            field.getType(),
+                            map_nom_valeur_param
+                    );
+
+                    field.set(objet, objetAttribut);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -281,4 +448,30 @@ public class Utilitaire {
         return false;
     }
 
+    public static boolean possedeAttribut(Parameter parameter) {
+        Class<?> type_param = parameter.getType();
+        Field[] liste_attributs = type_param.getDeclaredFields();
+
+        if (liste_attributs.length == 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean estNatif(Class<?> type) {
+        return type.isPrimitive() || type == String.class || type == Integer.class || type == Long.class
+                || type == Double.class || type == Boolean.class || type == LocalDate.class;
+    }
+
+    // raha natif ny type anle parametre dia tonga de alaina fotsiny ny valeur
+    // mifanaraka aminy avy any am vue
+    // sinon de jerena aloha ny attribut anle parametre de raha type natif de tonga
+    // de matchena ihany fa raha mbola tsy natif de idirana ndray ny attribut any
+
+
+
+
+    // parametre -> attribut -> si attribut natif -> matchena valeur avy any am vue
+                        //   -> sinon -> idirana ndray ny attribut anle attribut
 }
