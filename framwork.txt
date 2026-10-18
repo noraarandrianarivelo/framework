@@ -101,6 +101,14 @@ de affichena fotsiny lony pour l'instant le valeur.
 binding objet 
 ex: parametre anle fonction ohatra Employee de tonga de le instance anle Employee no fenoina
 
+=>>> A FAIRE AUSSI LISTE NO PARAMETRE AO ANATY CONTROLLER
 
-java 8, tomcat 9
-oracle 11 org ee
+> Sprint 8:
+upload ana fichier
+
+manamboatra classe vaovao MapFile ao anatiny misy attribut maromaro: (nom_fichier, extension, tableau bytes)
+
+de manao binding otrany tam sprint 7 bis ihany, verifiena oe any am formulaire ve misy input manana anarana mitovy ary am parametre fonction controller, si oui, verifiena oe MapFile ve ny type, raha MapFile ny type de alaina ny anarana avy any am request, alaina ny extension, de alaina le tableau de bytes
+de affichena lony ohatra
+
+atao attribut ana classe ohatra le MapFile na tonga de atao parametre ana fonction de tokony mety foana

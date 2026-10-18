@@ -86,7 +86,15 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
 
                 Object[] arguments = new Object[methode.getParameters().length];
 
-                Utilitaire.creerArguments(methode, arguments, request.getParameterMap());
+                // Verifiena oe misy envoie de fichier ve le requete
+                Collection<Part> parts = new ArrayList<>();
+                String ct = request.getContentType();
+                if (ct != null && ct.toLowerCase().startsWith("multipart/")) {
+                    parts = request.getParts();
+                }
+
+                Utilitaire.creerArguments(methode, arguments, request.getParameterMap(), parts);
+                // ---------------------------------------------------------------------
 
                 // MIla jerena oe inona daholo ny parametres an'ilay methode
                 if(applicationContext != null){

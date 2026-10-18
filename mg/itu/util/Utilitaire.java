@@ -1,12 +1,13 @@
 package mg.itu.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.annotation.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.net.URL;
 import java.util.*;
+import jakarta.servlet.http.Part;
+import java.lang.reflect.*;
+
 
 import com.google.gson.Gson;
 
@@ -230,37 +231,7 @@ public class Utilitaire {
         throw new IllegalArgumentException("Type non pris en charge : " + type.getName());
     }
 
-
-    // ty ndray zao no mila atao reflexion
-    // public static Map<String, Object> creerMapNomValeurParametre(Method methode, Map<String, String[]> param_value) {
-    //     Map<String, Object> map_nom_valeur_param = new HashMap<>();
-
-    //     for (Parameter p : methode.getParameters()) {
-
-    //         Class<?> type_param = p.getType();
-            
-    //         String nom_param = p.getName();
-
-    //         if (param_value.containsKey(nom_param)) {
-
-    //             String[] valeur_param = param_value.get(nom_param);
-
-    //             if (valeur_param != null && valeur_param.length > 0) {
-    //                 Object valeurConvertie = conversionObject(valeur_param[0], type_param);
-
-    //                 map_nom_valeur_param.put(nom_param, valeurConvertie);
-    //             }
-    //         }
-    //     }
-    //     // Map<String, String[]> param_value = request.getParameterMap(); // mamerina ny
-    //     // nom sy ny valeur anle input avy any am affichage
-    //     // Ny avy any am affichage efa azo daholo
-    //     // le mampifandray anazy amle anaranle parametre any am controller sisa
-
-    //     return map_nom_valeur_param;
-    // }
-
-    public static Map<String, Object> creerMapNomValeurParametre(Method methode, Map<String, String[]> param_value) {
+    public static Map<String, Object> creerMapNomValeurParametre(Method methode, Map<String, String[]> param_value, Collection<Part> parts) {
         Map<String, Object> map_nom_valeur_param = new HashMap<>();
 
         for (Parameter p : methode.getParameters()) {
@@ -278,6 +249,24 @@ public class Utilitaire {
                         Object valeurConvertie = conversionObject(valeur_param[0], type_param);
 
                         map_nom_valeur_param.put(nom_param, valeurConvertie);
+                    }
+                }
+            } else if (MapFile.class.isAssignableFrom(type_param)) {
+                // Gérer le cas où le paramètre est de type MapFile
+                for (Part part : parts) {
+                    if (part.getName().equals(nom_param)) {
+                        String nomFichier = part.getSubmittedFileName();
+                        String extension = nomFichier.substring(nomFichier.lastIndexOf('.') + 1);
+                        try {
+                            byte[] bytes = part.getInputStream().readAllBytes();
+                            MapFile mapFile = new MapFile(bytes, extension, nomFichier);
+                            map_nom_valeur_param.put(nom_param, mapFile);
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        break;
                     }
                 }
             } else {
@@ -351,27 +340,9 @@ public class Utilitaire {
         }
     }
 
-    // public static void creerArguments(Method methode, Object[] arguments,
-    //         Map<String, String[]> param_value) {
-    //     if (param_value != null) {
-    //         Map<String, Object> map_nom_valeur_param = creerMapNomValeurParametre(methode, param_value);
-
-    //         for (int i = 0; i < methode.getParameters().length; i++) {
-    //             Parameter p = methode.getParameters()[i];
-    //             String nom_param = p.getName();
-
-    //             if (map_nom_valeur_param.containsKey(nom_param)) {
-    //                 arguments[i] = map_nom_valeur_param.get(nom_param);
-    //             }
-    //         }
-    //     } else {
-    //         creerArguments(methode, arguments);
-    //     }
-    // }
-
-    public static void creerArguments(Method methode, Object[] arguments, Map<String, String[]> param_value) {
+    public static void creerArguments(Method methode, Object[] arguments, Map<String, String[]> param_value, Collection<Part> parts) {
         if (param_value != null) {
-            Map<String, Object> map_nom_valeur_param = creerMapNomValeurParametre(methode, param_value);
+            Map<String, Object> map_nom_valeur_param = creerMapNomValeurParametre(methode, param_value, parts);
 
             for (int i = 0; i < methode.getParameters().length; i++) {
                 Parameter p = methode.getParameters()[i];
@@ -382,6 +353,23 @@ public class Utilitaire {
                     if (map_nom_valeur_param.containsKey(nom_param)) {
                         arguments[i] = map_nom_valeur_param.get(nom_param);
                     }
+                } else if (List.class.isAssignableFrom(p.getType())) {
+                   Type typeElement = getTypeElementListe(p);
+                    if (typeElement == MapFile.class) {
+                        arguments[i] = creerListeMapFiles(p, parts);
+                    } else {
+                        arguments[i] = creerListeObjets(p, param_value);
+                    }
+                } else if (MapFile.class.isAssignableFrom(p.getType())) { // si MapFile
+                    Object fichier = map_nom_valeur_param.get(nom_param);
+
+                    if (fichier == null) {
+                        throw new IllegalArgumentException(
+                                "Aucun fichier reçu pour le paramètre '" + nom_param
+                                        + "'. Vérifiez enctype=\"multipart/form-data\" et le nom du champ HTML.");
+                    }
+
+                    arguments[i] = fichier;
                 } else { // sinon de jerena aloha ny attribut anle parametre de raha type natif de tonga de matchena ihany fa raha mbola tsy natif de idirana ndray ny attribut any
                     Object attributInstance = null;
 
@@ -401,6 +389,114 @@ public class Utilitaire {
         } else {
             creerArguments(methode, arguments);
         }
+    }
+
+    // PARAMETRES LISTE OBJECT
+    private static List<Object> creerListeObjets(Parameter parametre, Map<String, String[]> valeurs) {
+        Type typeGenerique = parametre.getParameterizedType();
+        if (!(typeGenerique instanceof ParameterizedType)) {
+            throw new IllegalArgumentException("Le paramètre liste " + parametre.getName()
+                    + " doit déclarer son type, par exemple List<Produit>");
+        }
+
+        Type typeElement = ((ParameterizedType) typeGenerique)
+                .getActualTypeArguments()[0];
+        if (!(typeElement instanceof Class<?>)) {
+            throw new IllegalArgumentException("Type d'élément de liste non pris en charge pour "
+                    + parametre.getName());
+        }
+
+        Class<?> classeElement = (Class<?>) typeElement;
+        String prefixe = parametre.getName() + "[";
+        SortedSet<Integer> indices = new TreeSet<>();
+        for (String nomValeur : valeurs.keySet()) {
+            if (nomValeur.startsWith(prefixe)) {
+                int finIndice = nomValeur.indexOf(']', prefixe.length());
+                if (finIndice > prefixe.length()) {
+                    try {
+                        indices.add(Integer.parseInt(nomValeur.substring(prefixe.length(), finIndice)));
+                    } catch (NumberFormatException ignored) {
+                        // Ignore les noms qui ne suivent pas le format liste[index].champ.
+                    }
+                }
+            }
+        }
+
+        List<Object> liste = new ArrayList<>();
+        for (Integer index : indices) {
+            try {
+                Object element = classeElement.getDeclaredConstructor().newInstance();
+                remplirObjetDepuisParametres(element, classeElement,
+                        prefixe + index + "].", valeurs);
+                liste.add(element);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Impossible de créer un élément de la liste "
+                        + parametre.getName() + " de type " + classeElement.getName(), e);
+            }
+        }
+        return liste;
+    }
+
+    private static void remplirObjetDepuisParametres(Object objet, Class<?> type, String prefixe,
+            Map<String, String[]> valeurs) throws Exception {
+        for (Field champ : type.getDeclaredFields()) {
+            if (Modifier.isStatic(champ.getModifiers()) || champ.isSynthetic()) {
+                continue;
+            }
+            champ.setAccessible(true);
+            String nomChamp = prefixe + champ.getName();
+            if (Utilitaire.estNatif(champ.getType())) {
+                String[] valeursChamp = valeurs.get(nomChamp);
+                if (valeursChamp != null && valeursChamp.length > 0) {
+                    champ.set(objet, conversionObject(valeursChamp[0], champ.getType()));
+                }
+            } else if (!List.class.isAssignableFrom(champ.getType())) {
+                Object sousObjet = champ.getType().getDeclaredConstructor().newInstance();
+                remplirObjetDepuisParametres(sousObjet, champ.getType(), nomChamp + ".", valeurs);
+                champ.set(objet, sousObjet);
+            }
+        }
+    }
+
+
+    // PARAMETRE LISTE MAPFILE
+    private static Type getTypeElementListe(Parameter parametre) {
+        Type typeGenerique = parametre.getParameterizedType();
+        if (!(typeGenerique instanceof ParameterizedType)) {
+            throw new IllegalArgumentException("Le paramètre liste " + parametre.getName()
+                    + " doit déclarer son type, par exemple List<Produit>");
+        }
+        return ((ParameterizedType) typeGenerique).getActualTypeArguments()[0];
+    }
+
+    private static List<MapFile> creerListeMapFiles(Parameter parametre, Collection<Part> parts) {
+        String prefixe = parametre.getName() + "[";
+        SortedMap<Integer, Part> fichiers = new TreeMap<>();
+        for (Part part : parts) {
+            String nom = part.getName();
+            if (nom == null || !nom.startsWith(prefixe)) continue;
+            int finIndice = nom.indexOf(']', prefixe.length());
+            if (finIndice < 0 || finIndice != nom.length() - 1) continue;
+            try {
+                fichiers.put(Integer.parseInt(nom.substring(prefixe.length(), finIndice)), part);
+            } catch (NumberFormatException ignored) {
+                // Ignore les champs qui ne suivent pas le format liste[index].
+            }
+        }
+
+        List<MapFile> resultat = new ArrayList<>();
+        for (Part part : fichiers.values()) {
+            String nomFichier = part.getSubmittedFileName();
+            if (nomFichier == null || nomFichier.isBlank()) continue;
+            int point = nomFichier.lastIndexOf('.');
+            String extension = point >= 0 ? nomFichier.substring(point + 1) : "";
+            try {
+                resultat.add(new MapFile(part.getInputStream().readAllBytes(), extension, nomFichier));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Impossible de lire le fichier " + nomFichier, e);
+            }
+        }
+        return resultat;
     }
 
     public static void remplirObjet(Object objet, Class<?> type, Map<String, Object> map_nom_valeur_param) {
@@ -474,4 +570,5 @@ public class Utilitaire {
 
     // parametre -> attribut -> si attribut natif -> matchena valeur avy any am vue
                         //   -> sinon -> idirana ndray ny attribut anle attribut
+
 }
