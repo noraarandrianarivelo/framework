@@ -112,3 +112,39 @@ de manao binding otrany tam sprint 7 bis ihany, verifiena oe any am formulaire v
 de affichena lony ohatra
 
 atao attribut ana classe ohatra le MapFile na tonga de atao parametre ana fonction de tokony mety foana
+
+> Sprint 9:
+rendre la session de l'utilisateur disponible cote controller developpeur pour pouvoir envoyer des valeurs et prendre des valeurs
+
+Comment faire?
+MItovy am tamin'ny binding ihany, 
+manamboatra classe Session vaovao, de raha mahita an'iny le framework de injectena
+
+ao anatinle Session, afaka manao ajout ana attribut, mget attribut, modifier attribut
+
+ao anaty session asina attribut oe, map<String, Object> (nom attribut, valeur)
+
+fenoina a partir httpSession le map
+
+raha misy modification any am session le niinvokena ao anaty controller, de tsindrina amle map<String, Object> le httpSession taloha
+
+
+
+
+
+
+
+
+
+
+
+
+
+(Mbola tsy atao zao)
+
+SINGLETON CONTROLLER 
+1- Controller 1 tokony instance 1, de iny no mamaly ny requete rehetra
+manao verification oe raha efa instance le controller de le instance efa cree no ampiasaina, sinon mamorona instance vaovao de ampirimina anaty Context (cle: nom_controller, valeur: ny packagenle izy)
+
+ze zavatra itambarana ihany no azo atao anaty controller, sinon atao parametre
+

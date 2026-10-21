@@ -6,6 +6,7 @@ import mg.itu.util.*;
 import java.lang.annotation.ElementType;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ApplicationListener implements ServletContextListener {
     @Override
@@ -14,6 +15,7 @@ public class ApplicationListener implements ServletContextListener {
 
         List<String> listeControllers = new ArrayList<>();
         Map<UrlMethod, Mapping> urlMapping;
+        ConcurrentHashMap<String, Session> mapSession;
 
         // Ao anaty UrlMethode: misy url et methode (GET ou POST)
         // Ao anaty Mapping ndray: misy classe et methode (fonction)
@@ -44,10 +46,14 @@ public class ApplicationListener implements ServletContextListener {
             urlMapping = Utilitaire.recupererUrlMapping(
                     new Utilitaire(nom_package, "mg.itu.annotation.UrlMapping", ElementType.METHOD));
 
+            mapSession = new ConcurrentHashMap<String, Session>();
+
+
             // ETO LE AMPINA 2EME VERIFICATION ANNOTATION @ApiRest de ampidirina anaty zavatra variable ray daholo
             // ILAINA FANTATRA OE INONA NY CLASSES, NY METHODE SY NY URL
 
             servletContext.setAttribute("urlMapping", urlMapping);
+            servletContext.setAttribute("mapSession", mapSession);
         } catch (Exception e) {
 
             System.err.println("================================");

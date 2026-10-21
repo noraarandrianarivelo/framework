@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.lang.annotation.*;
 import java.net.URL;
 import java.util.*;
+
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.lang.reflect.*;
 
@@ -177,8 +179,7 @@ public class Utilitaire {
         return urlMapping;
     }
 
-    // je pense que il faut que je cree une toute nouvelle fonction, de asina map
-    // mitazona ny anarana sy ny valeur anle parametre
+    // Creer les arguments pour les methodes qui ont des parametres de ApplicationContext   
     public static void creerArguments(Method methode, Object[] arguments, Object applicationContext) {
         for (int i = 0; i < methode.getParameters().length; i++) {
             Parameter p = methode.getParameters()[i];
@@ -188,11 +189,7 @@ public class Utilitaire {
         }
     }
 
-    public static void creerArguments(Method methode, Object[] arguments) {
-        for (int i = 0; i < methode.getParameters().length; i++) {
-            Parameter p = methode.getParameters()[i];
-        }
-    }
+
 
     public static boolean estApiRest(Method methode) {
         return methode.isAnnotationPresent(mg.itu.annotation.ApiRest.class);
@@ -328,9 +325,6 @@ public class Utilitaire {
                 }
 
             } else {
-
-                // Le champ est lui-même un objet :
-                // on descend encore d'un niveau.
                 remplirParametresRecursivement(
                         type_attribut,
                         param_value,
@@ -386,8 +380,6 @@ public class Utilitaire {
                     }
                 }
             }
-        } else {
-            creerArguments(methode, arguments);
         }
     }
 
@@ -544,6 +536,8 @@ public class Utilitaire {
         return false;
     }
 
+
+
     public static boolean possedeAttribut(Parameter parameter) {
         Class<?> type_param = parameter.getType();
         Field[] liste_attributs = type_param.getDeclaredFields();
@@ -570,5 +564,8 @@ public class Utilitaire {
 
     // parametre -> attribut -> si attribut natif -> matchena valeur avy any am vue
                         //   -> sinon -> idirana ndray ny attribut anle attribut
+
+
+
 
 }

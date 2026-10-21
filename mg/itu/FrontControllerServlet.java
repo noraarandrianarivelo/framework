@@ -10,10 +10,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.InvocationTargetException;
 
-import mg.itu.util.*;
 import java.util.*;
 
+import mg.itu.util.*;
+
 import com.google.gson.Gson;
+import java.util.concurrent.ConcurrentHashMap;
 
 import mg.itu.listener.ApplicationListener;
 import mg.itu.view.*;
@@ -44,6 +46,7 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
         String method = request.getMethod();
         afficher(url, method, request, response, out);
 
+        // request.getSession().getAttributeNames();
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -63,25 +66,37 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
         UrlMethod urlMethod = new UrlMethod(url, method);
         Mapping mapping = urlMapping.get(urlMethod);
 
+        ConcurrentHashMap<String, Session> mapSession = (ConcurrentHashMap<String, Session>) getServletContext().getAttribute("mapSession");
+
+        HttpSession httpSession = request.getSession();
+        String idSession = httpSession.getId();
+
+        Session sessionUser = mapSession.get(idSession);
+        if(sessionUser == null) {
+            sessionUser = new Session(new HashMap<>());
+            mapSession.put(idSession, sessionUser);
+        }
+
+        UtilitaireSession.creerMapSession(request.getSession(), sessionUser);
+
         if (mapping != null) {
-             
+
             try {
                 Object instance = mapping.getClasse().getDeclaredConstructor().newInstance();
                 Method methode = mapping.getMethode();
                 boolean is_apiRest = Utilitaire.estApiRest(methode);
 
-                if(is_apiRest){
+                if (is_apiRest) {
                     response.setContentType("application/json");
-                }
-                else
-                {
+                } else {
                     response.setContentType("text/html");
 
                     out.println("<h1>Front Controller</h1>");
                     out.println("<p>URL recue : " + url + "</p>");
-                    out.println("<p>URL: " + urlMethod.getUrl() + " avec la methode : " + urlMethod.getMethod() + "| Classe: "
-                    + mapping.getClasse().getName() + " | Fonction: "
-                    + mapping.getMethode().getName() + "</p>");
+                    out.println("<p>URL: " + urlMethod.getUrl() + " avec la methode : " + urlMethod.getMethod()
+                            + "| Classe: "
+                            + mapping.getClasse().getName() + " | Fonction: "
+                            + mapping.getMethode().getName() + "</p>");
                 }
 
                 Object[] arguments = new Object[methode.getParameters().length];
@@ -97,17 +112,26 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
                 // ---------------------------------------------------------------------
 
                 // MIla jerena oe inona daholo ny parametres an'ilay methode
-                if(applicationContext != null){
-                
-                    if(Utilitaire.possedeApplicationContext(methode)){
+                if (applicationContext != null) {
+
+                    if (Utilitaire.possedeApplicationContext(methode)) {
                         Utilitaire.creerArguments(methode, arguments, applicationContext);
                     }
 
                 }
 
+                if (UtilitaireSession.possedeSession(methode)) {
+                    UtilitaireSession.creerArguments(methode, arguments, sessionUser);
+                }
+
                 Object resultat = methode.invoke(instance, arguments);
 
-                // tokony mbola misy condition hoe raha apiRest dia json no averina fa raha tsy apiRest dia ModelAndView no averina
+                if (UtilitaireSession.possedeSession(methode)) {
+                    UtilitaireSession.synchroniserSession(sessionUser, request.getSession());
+                }
+
+                // tokony mbola misy condition hoe raha apiRest dia json no averina fa raha tsy
+                // apiRest dia ModelAndView no averina
                 if (resultat instanceof ModelAndView) {
                     ModelAndView mv = (ModelAndView) resultat;
                     ViewResolver viewResolver = new ViewResolver();
@@ -121,12 +145,12 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
 
                     RequestDispatcher dispatcher = request.getRequestDispatcher(viewResolver.getCheminCompletVue());
                     dispatcher.forward(request, response);
-                } 
-                
-                if(is_apiRest){
-                    if(resultat instanceof String){
+                }
+
+                if (is_apiRest) {
+                    if (resultat instanceof String) {
                         out.println((String) resultat);
-                    }else{
+                    } else {
                         out.println(Utilitaire.toJson(resultat));
                     }
                 }
@@ -134,15 +158,15 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
             } catch (Exception e) {
                 e.printStackTrace();
                 Throwable cause = e instanceof InvocationTargetException
-                    ? ((InvocationTargetException) e).getTargetException()
-                    : e.getCause();
-                if (cause != null) cause.printStackTrace();
+                        ? ((InvocationTargetException) e).getTargetException()
+                        : e.getCause();
+                if (cause != null)
+                    cause.printStackTrace();
                 Throwable erreurReelle = cause != null ? cause : e;
                 out.println("<p>Erreur : " + erreurReelle.getClass().getName()
-                    + " - " + erreurReelle.getMessage() + "</p>");
+                        + " - " + erreurReelle.getMessage() + "</p>");
             }
 
-            
         } else {
             out.println("Url non trouvee : " + url);
             out.println("<h2>Liste des URL disponibles :</h2>");
