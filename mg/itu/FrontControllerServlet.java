@@ -28,6 +28,8 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
 
     Object applicationContext;
 
+    String nomAttributSessionAuth;
+
     public void init() throws ServletException {
         listeControllers = (List<String>) getServletContext().getAttribute("listeControllers");
         urlMapping = (Map<UrlMethod, Mapping>) getServletContext().getAttribute("urlMapping");
@@ -35,7 +37,6 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
         if (getServletContext().getAttribute("springContext") != null) {
             applicationContext = getServletContext().getAttribute("springContext");
         }
-
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -85,6 +86,7 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
                 Object instance = mapping.getClasse().getDeclaredConstructor().newInstance();
                 Method methode = mapping.getMethode();
                 boolean is_apiRest = Utilitaire.estApiRest(methode);
+                boolean need_Auth = UtilitaireAuth.needAuth(methode);
 
                 if (is_apiRest) {
                     response.setContentType("application/json");
@@ -118,6 +120,15 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
                         Utilitaire.creerArguments(methode, arguments, applicationContext);
                     }
 
+                }
+
+                if (need_Auth){
+                    String nomAttributSessionAVerifierAuth = getServletContext().getInitParameter("nomValeurSessionAVerifierAuth");
+                    if(request.getSession().getAttribute(nomAttributSessionAVerifierAuth) == null){
+                        response.sendError(403, "Access non autorise");
+                        return;
+                    }
+                    nomAttributSessionAuth = request.getSession().getAttribute(nomAttributSessionAVerifierAuth).toString();
                 }
 
                 if (UtilitaireSession.possedeSession(methode)) {
