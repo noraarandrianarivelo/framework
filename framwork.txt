@@ -129,10 +129,32 @@ fenoina a partir httpSession le map
 raha misy modification any am session le niinvokena ao anaty controller, de tsindrina amle map<String, Object> le httpSession taloha
 
 
+> Sprint 10:
+tsy maintsy authentifie le olona zay vo afaka miantso url avy any am controller
+raha misy url 1 misy annotation oe @Auth de mila authentifie zany le olona vao mahazo miacceder anle url
+
+Comment faire? 
 
 
+-> Possible valiny
+1- manamboatra annotation @authentificate par exemple
+2- verifiena ny methode rehetra ao anaty controller oe iza daholo no misy an'io annotation
+3- rehefa mi-connecte de mienregistre valeur ao anaty session ohatra (pour savoir oe inona ny anaranle variable session, de specifiena ao anaty web.xml izy)
+4- de iny nom de variable session iny no verifiena avy eo raha misy ao anaty session, raha misy de afaka miditra ao am le lien, sinon de manao access denied mamerina http 403
+
+=> donc possible oe mila misy donnee miditra any anaty base (user, mdp)
 
 
+> Sprint 10 bis:
+tsy maintsy manana role specifique zay vo afaka miantso anle url any am controller
+
+-> Meme chose que pour Sprint 10
+1- le @authentificate asina valeur ao anaty oe role = ... inona
+2- rehefa manao connexion otrany tetsy ambony de au lieu de userId fotsiny no tazomina ao am session, de on garde aussi le role de l'utilisateur 
+3- de a chaque fois miantso url 1, ka misy valeur le role, de verifiena lony oe misy userId sy misy anle role ilaina ve ao anaty session, raha misy de omena acces amle url izy, sinon de 403 forbidden
+
+
+NB: Rehefa mideconnecte le user, de fafana ny userId sy ny role ao anaty session
 
 
 
