@@ -228,6 +228,8 @@ public class Utilitaire {
         throw new IllegalArgumentException("Type non pris en charge : " + type.getName());
     }
 
+    
+
     public static Map<String, Object> creerMapNomValeurParametre(Method methode, Map<String, String[]> param_value, Collection<Part> parts) {
         Map<String, Object> map_nom_valeur_param = new HashMap<>();
 
@@ -334,7 +336,7 @@ public class Utilitaire {
         }
     }
 
-    public static void creerArguments(Method methode, Object[] arguments, Map<String, String[]> param_value, Collection<Part> parts) {
+    public static void creerArguments(Method methode, Object[] arguments, Map<String, String[]> param_value, Collection<Part> parts, Object applicationContext, Session sessionUser) {
         if (param_value != null) {
             Map<String, Object> map_nom_valeur_param = creerMapNomValeurParametre(methode, param_value, parts);
 
@@ -347,14 +349,18 @@ public class Utilitaire {
                     if (map_nom_valeur_param.containsKey(nom_param)) {
                         arguments[i] = map_nom_valeur_param.get(nom_param);
                     }
-                } else if (List.class.isAssignableFrom(p.getType())) {
+                } 
+                
+                else if (List.class.isAssignableFrom(p.getType())) {
                    Type typeElement = getTypeElementListe(p);
                     if (typeElement == MapFile.class) {
                         arguments[i] = creerListeMapFiles(p, parts);
                     } else {
                         arguments[i] = creerListeObjets(p, param_value);
                     }
-                } else if (MapFile.class.isAssignableFrom(p.getType())) { // si MapFile
+                } 
+                
+                else if (MapFile.class.isAssignableFrom(p.getType())) { // si MapFile
                     Object fichier = map_nom_valeur_param.get(nom_param);
 
                     if (fichier == null) {
@@ -364,7 +370,20 @@ public class Utilitaire {
                     }
 
                     arguments[i] = fichier;
-                } else { // sinon de jerena aloha ny attribut anle parametre de raha type natif de tonga de matchena ihany fa raha mbola tsy natif de idirana ndray ny attribut any
+                } 
+                
+                else if (Utilitaire.estApplicationContext(p)) {
+                    if(applicationContext != null) {
+                        Utilitaire.creerArguments(methode, arguments, applicationContext);
+                    }
+                } 
+
+                else if (UtilitaireSession.estSession(p)) {
+                    UtilitaireSession.creerArguments(methode, arguments, sessionUser);
+                }
+
+                
+                else { // sinon de jerena aloha ny attribut anle parametre de raha type natif de tonga de matchena ihany fa raha mbola tsy natif de idirana ndray ny attribut any
                     Object attributInstance = null;
 
                     if(attributInstance == null){
@@ -529,12 +548,20 @@ public class Utilitaire {
 
     public static boolean possedeApplicationContext(Method methode) {
         for (Parameter p : methode.getParameters()) {
-            if (p.getType().getSimpleName().equals("ApplicationContext")) {
+            if (estApplicationContext(p)) {
                 return true;
             }
         }
         return false;
     }
+
+        public static boolean estApplicationContext(Parameter p) {
+            if (p.getType().getSimpleName().equals("ApplicationContext")) {
+                return true;
+            }
+        
+            return false;
+        }
 
 
 

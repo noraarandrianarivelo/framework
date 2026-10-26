@@ -12,13 +12,19 @@ import jakarta.servlet.http.HttpSession;
 public class UtilitaireSession {
     public static boolean possedeSession(Method methode) {
         for (Parameter p : methode.getParameters()) {
-            if (p.getType().isAssignableFrom(Session.class)) {
+            if (estSession(p)) {
                 return true;
             }
         }
         return false;
     }
 
+    public static boolean estSession(Parameter p) {
+        if (p.getType().isAssignableFrom(Session.class)) {
+            return true;
+        }
+        return false;
+    }
     
     public static void creerArguments(Method methode, Object[] arguments, Session session) {
         for (int i = 0; i < methode.getParameters().length; i++) {

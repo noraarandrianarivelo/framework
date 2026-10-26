@@ -17,6 +17,7 @@ import mg.itu.util.*;
 import com.google.gson.Gson;
 import java.util.concurrent.ConcurrentHashMap;
 
+import mg.itu.annotation.Auth;
 import mg.itu.listener.ApplicationListener;
 import mg.itu.view.*;
 
@@ -28,7 +29,9 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
 
     Object applicationContext;
 
-    String nomAttributSessionAuth;
+    String nomAttributSessionAVerifierAuth;
+
+    String nomAttributSessionAVerifierAuthRole;
 
     public void init() throws ServletException {
         listeControllers = (List<String>) getServletContext().getAttribute("listeControllers");
@@ -110,30 +113,42 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
                     parts = request.getParts();
                 }
 
-                Utilitaire.creerArguments(methode, arguments, request.getParameterMap(), parts);
+                Utilitaire.creerArguments(methode, arguments, request.getParameterMap(), parts, applicationContext, sessionUser);
                 // ---------------------------------------------------------------------
 
-                // MIla jerena oe inona daholo ny parametres an'ilay methode
-                if (applicationContext != null) {
-
-                    if (Utilitaire.possedeApplicationContext(methode)) {
-                        Utilitaire.creerArguments(methode, arguments, applicationContext);
-                    }
-
-                }
-
                 if (need_Auth){
-                    String nomAttributSessionAVerifierAuth = getServletContext().getInitParameter("nomValeurSessionAVerifierAuth");
+                    String[] roles = methode.getAnnotation(Auth.class).roles();
+                    nomAttributSessionAVerifierAuth = getServletContext().getInitParameter("nomValeurSessionAVerifierAuth");
+                    nomAttributSessionAVerifierAuthRole = getServletContext().getInitParameter("nomAttributSessionRoleAVerifierAuth");
+
+
                     if(request.getSession().getAttribute(nomAttributSessionAVerifierAuth) == null){
                         response.sendError(403, "Access non autorise");
                         return;
                     }
-                    nomAttributSessionAuth = request.getSession().getAttribute(nomAttributSessionAVerifierAuth).toString();
+
+                    if(request.getSession().getAttribute(nomAttributSessionAVerifierAuthRole) != null){
+                        if(roles.length > 0){
+                            boolean roleAutorise = false;
+                            String roleUser = request.getSession().getAttribute(nomAttributSessionAVerifierAuthRole).toString();
+                            
+                            for(String role : roles){
+                                if(role.equals(roleUser)){
+                                    roleAutorise = true;
+                                }
+                            }
+
+                            if(!roleAutorise){
+                                response.sendError(403, "Le role: `" + roleUser + "` n'est pas autorise a acceder a ce lien");
+                                return;
+                            }
+                        }
+
+                    }
+
+
                 }
 
-                if (UtilitaireSession.possedeSession(methode)) {
-                    UtilitaireSession.creerArguments(methode, arguments, sessionUser);
-                }
 
                 Object resultat = methode.invoke(instance, arguments);
 
