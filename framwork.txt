@@ -113,11 +113,26 @@ de affichena lony ohatra
 
 atao attribut ana classe ohatra le MapFile na tonga de atao parametre ana fonction de tokony mety foana
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 > Sprint 9:
 rendre la session de l'utilisateur disponible cote controller developpeur pour pouvoir envoyer des valeurs et prendre des valeurs
 
 Comment faire?
-MItovy am tamin'ny binding ihany, 
+Mitovy am tamin'ny binding ihany, 
 manamboatra classe Session vaovao, de raha mahita an'iny le framework de injectena
 
 ao anatinle Session, afaka manao ajout ana attribut, mget attribut, modifier attribut
@@ -128,6 +143,8 @@ fenoina a partir httpSession le map
 
 raha misy modification any am session le niinvokena ao anaty controller, de tsindrina amle map<String, Object> le httpSession taloha
 
+
+tazomina ao anaty context ny session rehetra, donc manana Map<String, Session> tsika ao anaty (idSession, Session)
 
 > Sprint 10:
 tsy maintsy authentifie le olona zay vo afaka miantso url avy any am controller
@@ -149,7 +166,7 @@ Comment faire?
 tsy maintsy manana role specifique zay vo afaka miantso anle url any am controller
 
 -> Meme chose que pour Sprint 10
-1- le @authentificate asina valeur ao anaty oe role = ... inona
+1- le @authentificate asina valeur ao anaty oe role = [] ... inona
 2- rehefa manao connexion otrany tetsy ambony de au lieu de userId fotsiny no tazomina ao am session, de on garde aussi le role de l'utilisateur 
 3- de a chaque fois miantso url 1, ka misy valeur le role, de verifiena lony oe misy userId sy misy anle role ilaina ve ao anaty session, raha misy de omena acces amle url izy, sinon de 403 forbidden
 

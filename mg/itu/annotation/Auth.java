@@ -5,5 +5,5 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface Auth {
-    // String[] roles(); rehefa miampy role le izy
+    String[] roles() default {}; // rehefa miampy role le izy
 }
