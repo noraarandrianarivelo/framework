@@ -27,6 +27,8 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
 
     Map<UrlMethod, Mapping> urlMapping;
 
+    Map<Class<?>, Object> controllerInstances;
+
     Object applicationContext;
 
     String nomAttributSessionAVerifierAuth;
@@ -36,6 +38,8 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
     public void init() throws ServletException {
         listeControllers = (List<String>) getServletContext().getAttribute("listeControllers");
         urlMapping = (Map<UrlMethod, Mapping>) getServletContext().getAttribute("urlMapping");
+        controllerInstances = (Map<Class<?>, Object>) getServletContext()
+                .getAttribute(ApplicationListener.CONTROLLER_INSTANCES_ATTRIBUTE);
 
         if (getServletContext().getAttribute("springContext") != null) {
             applicationContext = getServletContext().getAttribute("springContext");
@@ -86,7 +90,7 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
         if (mapping != null) {
 
             try {
-                Object instance = mapping.getClasse().getDeclaredConstructor().newInstance();
+                Object instance = getControllerInstance(mapping.getClasse());
                 Method methode = mapping.getMethode();
                 boolean is_apiRest = Utilitaire.estApiRest(methode);
                 boolean need_Auth = UtilitaireAuth.needAuth(methode);
@@ -143,6 +147,8 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
                                 return;
                             }
                         }
+
+                        
 
                     }
 
@@ -205,5 +211,21 @@ public class FrontControllerServlet extends HttpServlet implements ServletContex
             }
         }
     }
+
+    private Object getControllerInstance(Class<?> controllerClass) throws ReflectiveOperationException {
+                            Object instance = controllerInstances.get(controllerClass);
+                            if (instance != null) {
+                                return instance;
+                            }
+
+                            synchronized (controllerInstances) {
+                                instance = controllerInstances.get(controllerClass);
+                                if (instance == null) {
+                                    instance = controllerClass.getDeclaredConstructor().newInstance();
+                                    controllerInstances.put(controllerClass, instance);
+                                }
+                            }
+                            return instance;
+                        }
 
 }

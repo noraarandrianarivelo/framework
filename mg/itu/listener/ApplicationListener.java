@@ -9,6 +9,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ApplicationListener implements ServletContextListener {
+    public static final String CONTROLLER_INSTANCES_ATTRIBUTE = "controllerInstances";
+
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         ServletContext servletContext = servletContextEvent.getServletContext();
@@ -16,6 +18,7 @@ public class ApplicationListener implements ServletContextListener {
         List<String> listeControllers = new ArrayList<>();
         Map<UrlMethod, Mapping> urlMapping;
         ConcurrentHashMap<String, Session> mapSession;
+        ConcurrentHashMap<Class<?>, Object> controllerInstances = new ConcurrentHashMap<>();
 
         // Ao anaty UrlMethode: misy url et methode (GET ou POST)
         // Ao anaty Mapping ndray: misy classe et methode (fonction)
@@ -54,6 +57,7 @@ public class ApplicationListener implements ServletContextListener {
 
             servletContext.setAttribute("urlMapping", urlMapping);
             servletContext.setAttribute("mapSession", mapSession);
+            servletContext.setAttribute(CONTROLLER_INSTANCES_ATTRIBUTE, controllerInstances);
         } catch (Exception e) {
 
             System.err.println("================================");
